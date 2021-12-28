@@ -341,25 +341,22 @@ sub asy2all {                                                           #{{{2
     # save dependency information and cleanup
     my $dirname  = dirname($_[0]);
     my $basename = basename($_[0]);
-    unlink("/tmp/$basename.pre");   # we don't need .pre file
-    for (</tmp/$basename*>) {
-      my $filename = "$dirname/" . basename($_);
-      move($_, $filename);
-      rdb_add_generated($filename);
+    for (<$dirname/$basename*>) {
+      /[.]asy$/ and next;
+      /[.](pdf|tex)$/
+        ? rdb_add_generated($_)
+        : unlink($_);
     }
     rdb_set_source(our $rule, keys %dep);
     return $rval;
   }
   open(STDERR, '>&', STDOUT);
 
-  # run asymptote and output in /tmp before moving files back to destination
-  # this is done because asymptote cleans files generated on a previous run
-  # in a new run, for example:
-  #   - first run with '-inlinetex' generates a .tex file
-  #   - second run without '-inlinetex' ends up removing the .tex file
-  our $pdf_method;
+  # run asymptote
+  my  $dir = "'$cur_dir/$asy_dir'";
   my  $inline = ${our $Pdest} =~ /\.tex$/ ? '-inlinetex' : '';
-  Run_subst("$asymptote $inline -tex $pdf_method -cd /tmp %S") && die;
+  our $pdf_method;
+  Run_subst("$asymptote $inline -tex $pdf_method -cd '$dir' %S") && die;
   exit;
 }                                                                       #}}}2
 
