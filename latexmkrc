@@ -332,7 +332,8 @@ sub asy2all {                                                           #{{{2
     # parse output
     my %dep;
     while (<$dump>) {
-      $dep{$2} = 1 if (/^(Including|Loading) .* from (.*)\s*$/);
+      /^(Including|Loading) .* from (.*)\s*$/
+        and $dep{$2 =~ s|^([^/].*)$|$cur_dir/$asy_dir/$1|r} = 1;
       warn $_;
     }
     close $dump;
